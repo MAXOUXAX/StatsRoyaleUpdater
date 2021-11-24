@@ -43,28 +43,31 @@ s = sched.scheduler(time.time, time.sleep)
 def refresh_stats(): 
 	logger.info("🕓  Refreshing statistics...")
 	
-	for player in players:
-		headers = {
-			'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
-			'Accept': '*/*',
-			'Accept-Language': 'fr,fr-FR;q=0.5',
-			'X-Requested-With': 'XMLHttpRequest',
-			'Connection': 'keep-alive',
-			'Referer': player.url,
-			'Sec-Fetch-Dest': 'empty',
-			'Sec-Fetch-Mode': 'cors',
-			'Sec-Fetch-Site': 'same-origin',
-			'TE': 'trailers',
-		}
-		request = requests.get(player.url + '/refresh', headers=headers)
-		requestJson = request.json()
-		success = requestJson['success']
-		if(success):
-			logger.info("✅  Refreshed {0} successfully".format(player.name))
-		else:
-			logger.error("⛔  Error occured during {0} refresh. Here's the request response: \n{1}".format(player.name, requestJson))
-	logger.info("🕓  Done refreshing statistics. Next refresh in 30 minutes.")
-	s.enter(60*30, 1, refresh_stats)
+	try:
+		for player in players:
+			headers = {
+				'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
+				'Accept': '*/*',
+				'Accept-Language': 'fr,fr-FR;q=0.5',
+				'X-Requested-With': 'XMLHttpRequest',
+				'Connection': 'keep-alive',
+				'Referer': player.url,
+				'Sec-Fetch-Dest': 'empty',
+				'Sec-Fetch-Mode': 'cors',
+				'Sec-Fetch-Site': 'same-origin',
+				'TE': 'trailers',
+			}
+			request = requests.get(player.url + '/refresh', headers=headers)
+			requestJson = request.json()
+			success = requestJson['success']
+			if(success):
+				logger.info("✅  Refreshed {0} successfully".format(player.name))
+			else:
+				logger.error("⛔  Error occured during {0} refresh. Here's the request response: \n{1}".format(player.name, requestJson))
+		logger.info("🕓  Done refreshing statistics. Next refresh in 30 minutes.")
+		s.enter(60*30, 1, refresh_stats)
+	except Exception as e:
+		logger.error(str(e))
 
 s.enter(5, 1, refresh_stats)
 logger.info("📢  Started!")
