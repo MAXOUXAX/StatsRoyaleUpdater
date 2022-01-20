@@ -45,22 +45,29 @@ def make_request(url):
 	}
 	return requests.get(url, headers=headers)
 
+def refresh_profile(player):
+	request = make_request(player.url + "/refresh")
+	requestJson = request.json()
+	success = requestJson['success']
+	if(success):
+		logger.info("✅  Refreshed {0} successfully".format(player.name))
+	else:
+		logger.error("⛔  Error occured during {0} refresh. Here's the request response: \n{1}".format(player.name, requestJson))
+
 s = sched.scheduler(time.time, time.sleep)
 def refresh_stats(): 
 	logger.info("🕓  Refreshing statistics...")
 	
 	try:
+		#refreshing clan
+		refresh_profile(Player("Clan", clan + "/refresh"))
+
+		#refreshing players
 		request = make_request(clan)
 		soup = BeautifulSoup(request.content, 'html.parser')
 		for element in soup.select('body > div.layout__page > div.layout__container > div > div.clan__table > div > div > a'):
 			player = Player(element.getText(), element.get('href'))
-			request = make_request(player.url + "/refresh")
-			requestJson = request.json()
-			success = requestJson['success']
-			if(success):
-				logger.info("✅  Refreshed {0} successfully".format(player.name))
-			else:
-				logger.error("⛔  Error occured during {0} refresh. Here's the request response: \n{1}".format(player.name, requestJson))
+			refresh_profile(player)
 		logger.info("🕓  Done refreshing statistics. Next refresh in 30 minutes.")
 		s.enter(60*30, 1, refresh_stats)
 	except Exception as e:
