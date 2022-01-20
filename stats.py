@@ -60,7 +60,7 @@ def refresh_stats():
 	
 	try:
 		#refreshing clan
-		refresh_profile(Player("Clan", clan + "/refresh"))
+		refresh_profile(Player("Clan", clan))
 
 		#refreshing players
 		request = make_request(clan)
