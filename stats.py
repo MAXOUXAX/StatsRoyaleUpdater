@@ -8,12 +8,6 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setLevel(logging.ERROR)
-consoleFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", "%d/%m/%y %H:%M:%S")
-consoleHandler.setFormatter(consoleFormatter)
-logger.addHandler(consoleHandler)
-
 if not os.path.exists("./logs"):
 	os.makedirs("./logs")
 
@@ -71,7 +65,7 @@ def refresh_stats():
 		logger.info("🕓  Done refreshing statistics. Next refresh in 30 minutes.")
 		s.enter(60*30, 1, refresh_stats)
 	except Exception as e:
-		logger.error(str(e))
+		logger.exception(str(e))
 
 s.enter(5, 1, refresh_stats)
 logger.info("📢  Started!")
