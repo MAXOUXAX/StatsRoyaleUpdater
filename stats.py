@@ -1,5 +1,6 @@
 import requests, time, sched
 import logging, logging.handlers, sys, os
+from bs4 import BeautifulSoup
 
 logging.basicConfig(level=logging.INFO,
 	format="%(asctime)s - %(levelname)s - %(message)s",
@@ -16,7 +17,7 @@ logger.addHandler(consoleHandler)
 if not os.path.exists("./logs"):
 	os.makedirs("./logs")
 
-fileHandler = logging.FileHandler(filename='logs/latest.log')
+fileHandler = logging.FileHandler(filename='logs/latest.log', encoding='utf-8')
 fileHandler.setLevel(logging.INFO)
 fileFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 fileHandler.setFormatter(fileFormatter)
@@ -27,37 +28,33 @@ class Player:
 		self.name = name
 		self.url = url
 
-players = [
-	Player("Clan", "https://statsroyale.com/clan/L8CQVJGV"),
-	Player("Garius912", "https://statsroyale.com/profile/2RQUC0U0"),
-	Player("MAXOUXAX", "https://statsroyale.com/profile/LLRVUVPG"),
-	Player("HunterGamer", "https://statsroyale.com/profile/PP0RPVUQ"),
-	Player("Dj nast", "https://statsroyale.com/profile/LVL8JG2Y"),
-	Player("Dj nast 2.0", "https://statsroyale.com/profile/2G8YL9QY9"),
-	Player("KTelineSama", "https://statsroyale.com/profile/2R2R8GY2"),
-	Player("BoZeY", "https://statsroyale.com/profile/Y8CY0RQPR"),
-	Player("Nzosim", "https://statsroyale.com/profile/2G0UJ9L2"),
-]
+clan = "https://statsroyale.com/clan/L8CQVJGV"
+
+def make_request(url):
+	headers = {
+		'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
+		'Accept': '*/*',
+		'Accept-Language': 'fr,fr-FR;q=0.5',
+		'X-Requested-With': 'XMLHttpRequest',
+		'Connection': 'keep-alive',
+		'Referer': url,
+		'Sec-Fetch-Dest': 'empty',
+		'Sec-Fetch-Mode': 'cors',
+		'Sec-Fetch-Site': 'same-origin',
+		'TE': 'trailers',
+	}
+	return requests.get(url, headers=headers)
 
 s = sched.scheduler(time.time, time.sleep)
 def refresh_stats(): 
 	logger.info("🕓  Refreshing statistics...")
 	
 	try:
-		for player in players:
-			headers = {
-				'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0',
-				'Accept': '*/*',
-				'Accept-Language': 'fr,fr-FR;q=0.5',
-				'X-Requested-With': 'XMLHttpRequest',
-				'Connection': 'keep-alive',
-				'Referer': player.url,
-				'Sec-Fetch-Dest': 'empty',
-				'Sec-Fetch-Mode': 'cors',
-				'Sec-Fetch-Site': 'same-origin',
-				'TE': 'trailers',
-			}
-			request = requests.get(player.url + '/refresh', headers=headers)
+		request = make_request(clan)
+		soup = BeautifulSoup(request.content, 'html.parser')
+		for element in soup.select('body > div.layout__page > div.layout__container > div > div.clan__table > div > div > a'):
+			player = Player(element.getText(), element.get('href'))
+			request = make_request(player.url + "/refresh")
 			requestJson = request.json()
 			success = requestJson['success']
 			if(success):
