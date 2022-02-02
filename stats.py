@@ -62,6 +62,7 @@ def refresh_stats():
 		for element in soup.select('body > div.layout__page > div.layout__container > div > div.clan__table > div > div > a'):
 			player = Player(element.getText(), element.get('href'))
 			refresh_profile(player)
+			time.sleep(3)
 		logger.info("🕓  Done refreshing statistics. Next refresh in 30 minutes.")
 		s.enter(60*30, 1, refresh_stats)
 	except Exception as e:
